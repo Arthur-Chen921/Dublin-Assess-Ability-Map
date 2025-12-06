@@ -1,1 +1,277 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundSense Dublin - Blind Assistance Platform</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <!-- Voice Control Activation -->
+    <div class="voice-control-toggle">
+        <button id="voiceControlBtn" class="voice-btn">
+            <i class="fas fa-microphone"></i> Voice Control
+        </button>
+        <span id="voiceStatus" class="status-active">Listening</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header with User Profile -->
+        <header class="app-header">
+            <div class="user-profile">
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-info">
+                    <h2>Welcome, Alex</h2>
+                    <div class="vision-type">
+                        <span class="vision-badge" id="visionType">Low Vision</span>
+                        <button id="mlAdaptBtn" class="adapt-btn">
+                            <i class="fas fa-robot"></i> AI Adapt
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <div class="haptic-indicator" id="hapticIndicator">
+                    <i class="fas fa-hand-paper"></i> Haptic Ready
+                </div>
+                <button id="emergencyBtn" class="emergency-btn">
+                    <i class="fas fa-life-ring"></i> Emergency
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard -->
+        <div class="dashboard">
+            <!-- Left Panel: Map Section -->
+            <div class="map-section">
+                <div class="map-header">
+                    <h3><i class="fas fa-map-marked-alt"></i> Dublin Navigation Map</h3>
+                    <div class="map-controls">
+                        <button id="detectObstaclesBtn" class="primary-btn">
+                            <i class="fas fa-radar"></i> Scan Area (100m)
+                        </button>
+                        <button id="centerUserBtn" class="secondary-btn">
+                            <i class="fas fa-crosshairs"></i> Center on Me
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Interactive Map -->
+                <div class="map-container">
+                    <div id="map"></div>
+                    
+                    <!-- User Detection Circle -->
+                    <div class="detection-circle" id="detectionCircle">
+                        <div class="pulse-ring"></div>
+                        <div class="user-marker">
+                            <i class="fas fa-blind"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- Obstacle Labels Overlay -->
+                    <div class="obstacle-labels" id="obstacleLabels"></div>
+                </div>
+                
+                <!-- Real-time Feedback Panel -->
+                <div class="feedback-panel">
+                    <div class="feedback-header">
+                        <h4><i class="fas fa-broadcast-tower"></i> Real-time Alerts</h4>
+                        <span class="alert-badge" id="alertCount">3</span>
+                    </div>
+                    <div class="feedback-content" id="feedbackAlerts">
+                        <!-- Alerts will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Features Section -->
+            <div class="features-section">
+                <!-- Feature 1: Obstacle Detection -->
+                <div class="feature-card feature-obstacle">
+                    <div class="feature-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Obstacle Radar</h3>
+                        <div class="source-badges">
+                            <span class="badge municipal">Municipal</span>
+                            <span class="badge volunteer">Volunteer</span>
+                            <span class="badge realtime">Live Update</span>
+                        </div>
+                    </div>
+                    
+                    <div class="obstacle-controls">
+                        <div class="range-slider">
+                            <label>Detection Radius: <span id="radiusValue">100</span>m</label>
+                            <input type="range" id="radiusSlider" min="50" max="500" value="100">
+                        </div>
+                        
+                        <div class="obstacle-filters">
+                            <button class="filter-btn active" data-type="all">All</button>
+                            <button class="filter-btn" data-type="construction">Construction</button>
+                            <button class="filter-btn" data-type="permanent">Permanent</button>
+                            <button class="filter-btn" data-type="temporary">Temporary</button>
+                        </div>
+                    </div>
+                    
+                    <div class="obstacle-list" id="obstacleList">
+                        <!-- Obstacles will be listed here -->
+                    </div>
+                    
+                    <div class="obstacle-stats">
+                        <div class="stat">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Last Scan: <span id="lastScanTime">Just now</span></span>
+                        </div>
+                        <div class="stat">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>Voice Alerts: <span id="voiceAlertCount">5</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Audio Bottles -->
+                <div class="feature-card feature-audio">
+                    <div class="feature-header">
+                        <h3><i class="fas fa-wave-square"></i> Sound Bottles</h3>
+                        <div class="audio-indicator">
+                            <i class="fas fa-volume-up"></i>
+                            <span id="nearbyAudioCount">2 nearby</span>
+                        </div>
+                    </div>
+                    
+                    <div class="audio-controls">
+                        <button id="recordAudioBtn" class="record-btn">
+                            <i class="fas fa-microphone"></i> Record Bottle
+                        </button>
+                        <button id="playNearbyBtn" class="play-btn">
+                            <i class="fas fa-play-circle"></i> Auto-Play Nearby
+                        </button>
+                    </div>
+                    
+                    <div class="audio-visualizer">
+                        <canvas id="audioVisualizer" width="300" height="60"></canvas>
+                    </div>
+                    
+                    <div class="audio-list" id="audioBottlesList">
+                        <!-- Audio bottles will be listed here -->
+                    </div>
+                    
+                    <div class="proximity-indicator">
+                        <div class="proximity-bar">
+                            <div class="proximity-fill" id="proximityFill"></div>
+                        </div>
+                        <span>Proximity to nearest audio: <span id="proximityValue">45m</span></span>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Accessibility Events -->
+                <div class="feature-card feature-events">
+                    <div class="feature-header">
+                        <h3><i class="fas fa-calendar-alt"></i> Accessibility Events</h3>
+                        <div class="social-indicator">
+                            <i class="fas fa-users"></i>
+                            <span id="friendsNearby">1 friend nearby</span>
+                        </div>
+                    </div>
+                    
+                    <div class="event-filters">
+                        <button class="event-filter-btn active" data-category="all">All Events</button>
+                        <button class="event-filter-btn" data-category="social">Social</button>
+                        <button class="event-filter-btn" data-category="business">Business</button>
+                        <button class="event-filter-btn" data-category="cultural">Cultural</button>
+                    </div>
+                    
+                    <div class="events-list" id="eventsList">
+                        <!-- Events will be listed here -->
+                    </div>
+                    
+                    <div class="haptic-feedback-area">
+                        <h4><i class="fas fa-hand-paper"></i> Haptic Feedback Zone</h4>
+                        <div class="vibration-patterns">
+                            <button class="vibration-btn" data-pattern="friend">
+                                <i class="fas fa-user-friends"></i> Friend Nearby
+                            </button>
+                            <button class="vibration-btn" data-pattern="event">
+                                <i class="fas fa-star"></i> Event Alert
+                            </button>
+                            <button class="vibration-btn" data-pattern="obstacle">
+                                <i class="fas fa-exclamation"></i> Obstacle Warning
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Feedback Panel -->
+        <div class="voice-feedback-panel">
+            <div class="voice-header">
+                <h4><i class="fas fa-assistive-listening-systems"></i> Voice Assistant</h4>
+                <div class="voice-controls">
+                    <button id="pauseVoiceBtn">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                    <button id="repeatVoiceBtn">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="voice-content">
+                <p id="voiceMessage">Welcome to SoundSense Dublin. I will guide you through the city with audio and haptic feedback.</p>
+                <div class="voice-progress">
+                    <div class="progress-bar" id="voiceProgress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Haptic Feedback Module (Placeholder) -->
+        <div class="haptic-module">
+            <div class="module-header">
+                <i class="fas fa-vibrate"></i>
+                <span>Tactile Feedback System</span>
+            </div>
+            <div class="module-status">
+                <div class="status-led" id="hapticStatusLed"></div>
+                <span id="hapticStatusText">Connected</span>
+            </div>
+        </div>
+
+        <!-- ML Adaptation Panel -->
+        <div class="ml-panel" id="mlPanel">
+            <div class="ml-header">
+                <i class="fas fa-brain"></i>
+                <h4>AI Adaptation System</h4>
+                <button class="close-panel" id="closeMLPanel">&times;</button>
+            </div>
+            <div class="ml-content">
+                <div class="ml-parameter">
+                    <label>Contrast Sensitivity</label>
+                    <input type="range" id="contrastSlider" min="1" max="10" value="5">
+                </div>
+                <div class="ml-parameter">
+                    <label>Audio Detail Level</label>
+                    <input type="range" id="audioDetailSlider" min="1" max="10" value="5">
+                </div>
+                <div class="ml-parameter">
+                    <label>Haptic Intensity</label>
+                    <input type="range" id="hapticSlider" min="1" max="10" value="5">
+                </div>
+                <button id="saveMLSettings" class="ml-save-btn">
+                    <i class="fas fa-save"></i> Save Profile
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="ml-adapter.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
